@@ -38,10 +38,11 @@ const initialState:State ={
   currentStep : 0,
   isStarted : false,
 }
-Sound.setCategory("Playback");
 
 const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
-
+  Sound.setCategory("Playback");
+  const successSound = new Sound('success.wav')
+  const failureSound = new Sound('game_over.wav')
   const blueRef = useRef<TouchableOpacity>(null);
   const yellowRef = useRef<TouchableOpacity>(null); 
   const redRef = useRef<TouchableOpacity>(null);
@@ -49,14 +50,10 @@ const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
 
   const colorsLUT = 
                     [
-                      {colorRef : greenRef , simonSound: new Sound('green_simon.wav', Sound.MAIN_BUNDLE, (error) => {
-                        if (error) {
-                            console.log('failed to load the sound', error);
-                        }
-                    }) , playerSound : new Sound('../sounds/green_user.wav') },
-                      {colorRef : blueRef , simonSound: new Sound('../sounds/blue_simon.wav') , playerSound : new Sound('../sounds/blue_user.wav')  },
-                      {colorRef : yellowRef , simonSound: new Sound('../sounds/yellow_simon.wav') , playerSound : new Sound('../sounds/yellow_simon.wav') },
-                      {colorRef : redRef , simonSound: new Sound('../sounds/red_simon.wav') , playerSound : new Sound('../sounds/red_user.wav') },
+                      {colorRef : greenRef , simonSound: new Sound('green_simon.wav'), playerSound : new Sound('green_user.wav') },
+                      {colorRef : blueRef , simonSound: new Sound('blue_simon.wav') , playerSound : new Sound('blue_user.wav')  },
+                      {colorRef : yellowRef , simonSound: new Sound('yellow_simon.wav') , playerSound : new Sound('yellow_user.wav') },
+                      {colorRef : redRef , simonSound: new Sound('red_simon.wav') , playerSound : new Sound('red_user.wav') },
                     ]
 	
   const [state,setState] = useState<State>(initialState)
@@ -86,6 +83,7 @@ const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
 
     if(state.stepsArray[state.currentStep] !== sequence){
       Alert.alert("you lose")
+      failureSound.play()
     }
 
     else{
@@ -107,13 +105,7 @@ const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
     console.log(state.stepsArray)
 
     for(var i = 0; i < state.stepsArray.length ; ++i){
-        colorsLUT[state.stepsArray[i]].simonSound.play((success) => {
-          if (success) {
-            console.log('successfully finished playing');
-          } else {
-            console.log('playback failed due to audio decoding errors');
-          }
-        });
+        colorsLUT[state.stepsArray[i]].simonSound.play()
         colorsLUT[state.stepsArray[i]].colorRef.current?.setOpacityTo(0.1,1000);
         await new Promise(resolve => setTimeout(resolve, 1000));
         colorsLUT[state.stepsArray[i]].colorRef.current?.setOpacityTo(1,1000);
