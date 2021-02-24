@@ -1,7 +1,11 @@
-export interface SimonColorChoose {
+export interface IncrementScore {
 
-    readonly type: 'COLOR'
-    payload: undefined | number
+    readonly type: 'INCREMENT'
 }
 
-export type SimonColor = SimonColorChoose
+export interface ResetScore {
+
+    readonly type: 'RESET'
+}
+
+export type Actions = | IncrementScore | ResetScore

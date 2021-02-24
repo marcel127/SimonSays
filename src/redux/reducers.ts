@@ -1,27 +1,29 @@
-import { SimonColor } from './actions'
+import { Actions } from './actions'
 
-type UserDetailsState = {
-   color : number | undefined
+type State = {
+   currentScore : number 
 }
 
 
-const initialState:UserDetailsState = {
-    color : undefined
+const initialState:State = {
+    currentScore : 0
 }
 
-const SimonColor = (state: UserDetailsState = initialState, action:SimonColor) => {
-
-    // console.log('SimonColor reducer with type ' + action.type + ' userDetails ' + action.userDetails)
+const AppReducer = (state: State = initialState, action:Actions) => {
 
     switch(action.type) {
 
-        case 'COLOR':
+        case 'INCREMENT':
 
-            return action.payload
+            return {
+                currentScore : state.currentScore + 1
+            }
+        case 'RESET' : 
+            return initialState            
 
         default:
             return state
     }
 }
 
-export default SimonColor
+export default AppReducer
