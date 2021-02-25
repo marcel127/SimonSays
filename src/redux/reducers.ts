@@ -2,11 +2,13 @@ import { Actions } from './actions'
 
 type State = {
    currentScore : number 
+   highestScore : number
 }
 
 
 const initialState:State = {
-    currentScore : 0
+    currentScore : 0,
+    highestScore : 0
 }
 
 const AppReducer = (state: State = initialState, action:Actions) => {
@@ -16,10 +18,21 @@ const AppReducer = (state: State = initialState, action:Actions) => {
         case 'INCREMENT':
 
             return {
-                currentScore : state.currentScore + 1
+                currentScore : state.currentScore + 1,
+                highestScore : state.highestScore
             }
         case 'RESET' : 
-            return initialState            
+             return {
+                currentScore : 0,
+                highestScore : state.highestScore
+            }
+        
+        case 'HIGHEST_SCORE' : 
+             
+            return {
+                currentScore : state.currentScore,
+                highestScore : action.payload     
+            }       
 
         default:
             return state

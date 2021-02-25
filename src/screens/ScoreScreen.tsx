@@ -7,6 +7,9 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserScore } from '../types';
+import { useDispatch } from 'react-redux';
+import { Actions } from '../redux/actions';
+import { Dispatch } from 'redux';
 
 interface Props {
   navigation: StackNavigationProp<ParamList, 'ScoreScreen'>,
@@ -15,6 +18,8 @@ interface Props {
 
 const ScoreScreen:React.FC<Props> = ({navigation, route}) => {
   const [scoreTable, setScoreTable] = React.useState<UserScore[]>([])
+  const scoreDispatcher = useDispatch<Dispatch<Actions>>()
+
 
 
   useEffect(() => {
@@ -24,50 +29,58 @@ const ScoreScreen:React.FC<Props> = ({navigation, route}) => {
             const value = await AsyncStorage.getItem('scoreTable')
             console.log("marcel"  + value)
             if(value !== null) {
-                setScoreTable( JSON.parse(value) )
+              let valueParsed = JSON.parse(value);
+                
+              scoreDispatcher({type : 'HIGHEST_SCORE', payload : valueParsed[0].score})
+              setScoreTable( valueParsed )
+                
             }
-              
         } catch(e) {
-            Alert.alert("scoreTable error")
+            Alert.alert("can't load the scoreTable" + e)
         }
+
+        
     }
 
     getData()
     
-},[])
+  },[])
 
   return (
     <Modal style={styles.container}
       visible={true}
-      onRequestClose={() => navigation.pop()}
-    >
+      transparent={true}
+      onRequestClose={() => navigation.pop()}>
       <View style={styles.ModalStyle}>
-
-      <View style={{flexDirection:'row'}}>
-            <Text style={{textAlign:'center',width:'20%'}}> rank </Text>
-            <Text style={{textAlign:'center',width:'50%'}}>  name </Text>
-            <Text style={{textAlign:'center',width:'30%'}}>  score</Text>
-      </View>
-
-      <FlatList
-            numColumns ={1}
-            data={scoreTable}
+          <View style={{backgroundColor:'#f5d069',borderRadius:20}}>
             
-            style={{ padding:10,borderRadius:20}}
+            <View style={{flexDirection:'row',borderBottomWidth:2,marginVertical:20,}}>
+                  <Text style={{textAlign:'center',width:'20%'}}> rank </Text>
+                  <Text style={{textAlign:'center',width:'50%'}}>  name </Text>
+                  <Text style={{textAlign:'center',width:'30%'}}>  score</Text>
+            </View>
 
-            renderItem={ ({ item,index }) => (
-              <View style={{flexDirection:'row'}}>
-                <Text style={{textAlign:'center',width:'20%'}}> {index + 1} </Text>
-                <Text style={{textAlign:'center',width:'50%'}}>  {item.name} </Text>
-                <Text style={{textAlign:'center',width:'30%'}}>  {item.score}</Text>
-              </View>
-                
-            )}/>
+            <FlatList
+                  numColumns ={1}
+                  data={scoreTable}
+                  
+                  style={{ padding:0}}
 
-            <TouchableOpacity onPress={()=> navigation.pop()}>
-                <Text style={{textAlign:'center',fontSize:30}}>Back to home page</Text>
-            </TouchableOpacity>
-    </View>
+                  renderItem={ ({ item,index }) => (
+                    <View style={{flexDirection:'row',backgroundColor  : index === 0 ? '#534f9c' :  index % 2 == 0 ? '#f5d069' : '#f5bb18'}}>
+                      <Text style={{textAlign:'center',width:'20%'}}> {index + 1} </Text>
+                      <Text style={{textAlign:'center',width:'50%'}}>  {item.name} </Text>
+                      <Text style={{textAlign:'center',width:'30%'}}>  {item.score}</Text>
+                    </View>
+                  )}/>
+
+                  <TouchableOpacity
+                      style={styles.BackButtonStyle}
+                      onPress={()=> navigation.pop()}>
+                        <Text style={{textAlign:'center',fontSize:30,color:'#f5d069'}}>Back to home page</Text>
+                  </TouchableOpacity> 
+            </View>
+        </View>
 
     </Modal>
   );
@@ -75,14 +88,29 @@ const ScoreScreen:React.FC<Props> = ({navigation, route}) => {
 
 const styles = StyleSheet.create({
   container : { 
-    
+    backgroundColor : 'rgba(52, 52, 52, 0.5)',
+    // paddingTop : 20,
   },
   ModalStyle : {
-    
-    marginTop : 20,
-    height:"80%",
+    // backgroundColor:'green',
+    backgroundColor : 'rgba(52, 52, 52, 0.5)',
+
+    paddingVertical : 150,
+    paddingHorizontal : 30,
+    height:"100%",
     width : "100%",
     alignSelf: 'center',
+},
+BackButtonStyle : {
+       
+  backgroundColor:'#534f9c',
+  borderRadius : 15,
+  width:'80%',
+  // alignItems:'center',
+  alignSelf: 'center',
+  marginVertical : 20,
+  paddingBottom : 10,
+  
 }
 
 

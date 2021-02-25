@@ -8,4 +8,10 @@ export interface ResetScore {
     readonly type: 'RESET'
 }
 
-export type Actions = | IncrementScore | ResetScore
+export interface HighestScore {
+
+    readonly type: 'HIGHEST_SCORE'
+    payload : number 
+}
+
+export type Actions = | IncrementScore | ResetScore | HighestScore 

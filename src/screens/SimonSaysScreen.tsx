@@ -21,14 +21,14 @@ interface Props {
 
 interface State  {
   stepsArray : number []
-  playerTurn : number,
+  playerTurn : boolean,
   currentStep : number,
   isStarted : boolean,
 }
 
 const initialState:State ={
   stepsArray : [],
-  playerTurn : SIMON_TURN,
+  playerTurn : false,
   currentStep : 0,
   isStarted : false,
 }
@@ -42,24 +42,21 @@ const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
 
   const playerScore = useSelector<Store, AppReducer> (state => state.App)
   const scoreDispatcher = useDispatch<Dispatch<Actions>>()
+  const [state,setState] = useState<State>(initialState)
 
   const colorsLUT = 
                     [
-                      {color : "green", colorRef : greenRef , simonSound: new Sound('green_simon.wav'), playerSound : new Sound('green_user.wav') },
-                      {color : "blue", colorRef : blueRef , simonSound: new Sound('blue_simon.wav') , playerSound : new Sound('blue_user.wav')  },
-                      {color : "yellow", colorRef : yellowRef , simonSound: new Sound('yellow_simon.wav') , playerSound : new Sound('yellow_user.wav') },
-                      {color : "red", colorRef : redRef , simonSound: new Sound('red_simon.wav') , playerSound : new Sound('red_user.wav') },
+                      {color : "green", colorRef : greenRef , colorSound: new Sound('green.wav') },
+                      {color : "blue", colorRef : blueRef , colorSound: new Sound('blue.wav')},
+                      {color : "yellow", colorRef : yellowRef , colorSound: new Sound('yellow.wav')},
+                      {color : "red", colorRef : redRef , colorSound: new Sound('red.wav')  },
                     ]
 	
-  const [state,setState] = useState<State>(initialState)
-  const [highestScore,setHighestScore] = useState<State>(0)
 
-  
   useEffect(() => {
     showSimonChoose();
   },[state.stepsArray])
 
-  
   useEffect(() => {
     
     const getData = async () => {
@@ -68,36 +65,38 @@ const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
             console.log("marcel"  + value)
             if(value !== null) {
               let temp = JSON.parse(value)
-              setHighestScore(temp[0].score)
-                
+              scoreDispatcher({type : 'HIGHEST_SCORE', payload : temp[0].score})
+            }
+            else {
+              scoreDispatcher({type : 'HIGHEST_SCORE', payload : 0})
             }
               
         } catch(e) {
-            Alert.alert("scoreTable error")
+            Alert.alert("can't load the scoreTable" + e)
         }
     }
 
     getData()
     
-},[])
+  },[])
 
   useEffect(() => {
 
     const checkLastStep = async () => {
         if(state.isStarted && state.currentStep === state.stepsArray.length){
-          setState(prevState => ({...prevState, playerTurn : SIMON_TURN}))
+          setState(prevState => ({...prevState, playerTurn : false}))
           scoreDispatcher({type : "INCREMENT"})
           await new Promise(resolve => setTimeout(resolve, 1000));
           
           simonTurn();
         }
+        
     }
-
     checkLastStep();
   },[state.currentStep])
 
   const isCorrectPress = (sequence : number) => {
-    colorsLUT[sequence].playerSound.play()
+    colorsLUT[sequence].colorSound.play()
 
     if(state.stepsArray[state.currentStep] !== sequence && state.isStarted){
       navigation.push("EnterNamePopup",{})
@@ -109,11 +108,13 @@ const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
     }
   }
 
-  const simonTurn = async () => { 
-      setState(prevState => ({
+  const simonTurn = async () => {   
+    setState(prevState => ({
         ...prevState,
+        playerTurn : false,
         stepsArray : [...state.stepsArray, Math.floor(Math.random() * 4)],
       }))
+      
   }
 
   const showSimonChoose = async () =>{
@@ -123,40 +124,49 @@ const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
       colorsLUT[state.stepsArray[i]].colorRef.current?.setOpacityTo(0.1,1000);
       await new Promise(resolve => setTimeout(resolve, 1000));
       colorsLUT[state.stepsArray[i]].colorRef.current?.setOpacityTo(1,1000);
-      colorsLUT[state.stepsArray[i]].simonSound.play()
+      colorsLUT[state.stepsArray[i]].colorSound.play()
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    setState(prevState => ({...prevState, playerTurn : USER_TURN, currentStep : 0}))
+    
+    setState(prevState => ({...prevState, currentStep : 0, playerTurn : true}))
+  
   }
 
   return (
     <View style={styles.container}>
+      <View style={{height:'100%',marginTop:20}}>
       
       <TouchableOpacity style={[styles.StartButtonStyle]}
             disabled={state.isStarted}
             onPress={() => {
-              setState(prevState => ({...prevState, isStarted : true}))
-                simonTurn()}}>
-          <Text style={{alignSelf:'center', fontSize:20}}>{!state.isStarted ? "start" : state.playerTurn === SIMON_TURN ? "Simon say...." : "Your turn"}</Text>
+              setState(prevState => ({...prevState, isStarted : true}))  
+              simonTurn()
+                
+            }}>
+          <Text style={styles.TopText}>{!state.isStarted ? "Start" : state.playerTurn ? "Your turn" : "Simon say..."}</Text>
       </TouchableOpacity>
       
-      
+      <View style={{height:280}}>
         <FlatList
             numColumns ={2}
             data={colorsLUT}
             keyExtractor = {item => item.color}
-            style={{backgroundColor : 'black',padding:10,borderRadius:20}}
+            style={styles.FlatListStyle}
 
             renderItem={ ({ item ,index }) => (
                 <TouchableOpacity
                   ref = {item.colorRef}
-                  disabled = {state.playerTurn === SIMON_TURN ? true : false}
+                  disabled = {!state.playerTurn}
                   style={[styles.ButtonStyle,{backgroundColor : item.color}]}
                   onPress={ () => isCorrectPress(index)  }>
                 </TouchableOpacity>
             )}/>
-
-      <Text style={{fontSize:30,marginTop:10}}>your score is : {playerScore.currentScore} </Text>
+      </View>
+      
+      <Text style={styles.ScoreStyle}>your score is : {playerScore.currentScore + "\n\n"} 
+          {playerScore.currentScore <= playerScore.highestScore  ? "Highest score : " +  playerScore.highestScore : "RULE BREAKER!!!" } 
+      </Text>
+      </View>
     </View>
   );
 };
@@ -164,12 +174,17 @@ const SimonSaysScreen:React.FC<Props> = ({navigation, route}) => {
 const styles = StyleSheet.create({
   container : {
     alignItems : 'center',
+    backgroundColor:'#f5d069',
+    height:'100%',
   },
   StartButtonStyle : {
     marginTop : 20,
-    marginBottom:50,
-    backgroundColor:'cyan',
-    width:"100%"
+    marginBottom:20,
+    backgroundColor:'#534f9c',
+    width:"80%",
+    paddingVertical : 20,
+    borderRadius: 20,
+    alignSelf:'center'
   },
   ButtonStyle : {
     height : 100,
@@ -177,7 +192,27 @@ const styles = StyleSheet.create({
     marginVertical : 10,
     marginHorizontal : 10,
     borderRadius: 20,
-  }
+  },
+  ScoreStyle : {
+    fontSize:30,
+    marginTop:20,
+    alignSelf:'center',
+    borderRadius: 20,
+    backgroundColor:'#534f9c',
+    padding:15,
+    color:'#f5d069',
+    textAlign : 'center'
+  },
+  TopText : {
+    alignSelf:'center', 
+    fontSize:30,
+    color:'#f5d069'
+  },
+  FlatListStyle : {
+    backgroundColor : 'black',
+    padding:10,
+    borderRadius:20
+  },
 });
 
 export default SimonSaysScreen;

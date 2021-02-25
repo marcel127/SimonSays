@@ -48,7 +48,7 @@ const EnterNamePopup:React.FC<Props> = ({navigation, route}) => {
         tempArray.push(value) 
         tempArray.sort(_compare)
         tempArray = tempArray.slice(0,10);
-
+        
         try {
           const jsonValue = JSON.stringify(tempArray)
           console.log()
@@ -73,18 +73,20 @@ const EnterNamePopup:React.FC<Props> = ({navigation, route}) => {
             <Text>You Lose!</Text>
             <TextInput
                 placeholder={"Enter your name"}
+                style={{textAlign:'center'}}
                 onChangeText={(text: string) => {
                     setPlayerName(text)
                 }}/>
             
             <TouchableOpacity 
                 disabled={playerName.length === 0}
+                style={styles.SubmitButtonStyle}
                 onPress = {async () => {
                     await storeData({score : playerScore.currentScore ,name : playerName})
                     // navigation.popToTop()
                     navigation.replace("ScoreScreen",{})
                 }}>
-                <Text style={{fontSize:40}}>Submit</Text>
+                <Text style={{ fontSize : 30,color:'#f5d069'}}>Submit</Text>
             </TouchableOpacity>
       
       </View>
@@ -101,13 +103,21 @@ const styles = StyleSheet.create({
 
     },
     ModalStyle : {
-        height:200,
-        width : 200,
+        height:150,
+        width : "50%",
         marginHorizontal:20,
         justifyContent:'center',
         borderRadius:20,
-        backgroundColor:'#fefefe',
+        backgroundColor:'#f5d069',
         alignItems: 'center',
+    },
+    SubmitButtonStyle : {
+       
+        backgroundColor:'#534f9c',
+        borderRadius : 15,
+        width:150,
+        alignItems:'center',
+        
     }
 
 

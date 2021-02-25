@@ -1,5 +1,6 @@
 export interface AppReducer {
     currentScore : number 
+    highestScore : number 
 }
 
 export interface Store {
